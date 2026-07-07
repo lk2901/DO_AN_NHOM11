@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ Thống Phân Loại Rác Thải AI</title>
+
+    <link rel="stylesheet" href="../static/style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>♻️ Hệ Thống Phân Loại Rác Thải Thông Minh</h1>
+        <p>
+          Ứng dụng AI sử dụng MobileNetV2 + Random Forest để nhận diện các loại
+          rác thải.
+        </p>
+      </header>
+
+      <!-- MENU TAB -->
+      <div class="menu-tabs">
+        <button class="tab-btn active" onclick="showTab('uploadTab', this)">
+          📁 Upload Ảnh
+        </button>
+
+        <button class="tab-btn" onclick="showTab('webcamTab', this)">
+          📷 Webcam
+        </button>
+      </div>
+
+      <!-- TAB UPLOAD -->
+      <div id="uploadTab" class="tab-content active">
+        <div class="card">
+          <h2>📁 Nhận Diện Bằng Ảnh Tải Lên</h2>
+
+          <input type="file" id="imageInput" accept="image/*" />
+
+          <button onclick="predictImage()">Phân Loại</button>
+
+          <div class="preview-area">
+            <img id="preview" src="" alt="" style="display: none" />
+          </div>
+
+          <div id="result">Chưa có kết quả</div>
+        </div>
+      </div>
+
+      <!-- TAB WEBCAM -->
+      <div id="webcamTab" class="tab-content">
+        <div class="card">
+          <h2>📷 Nhận Diện Bằng Webcam</h2>
+
+          <div class="webcam-buttons">
+            <button onclick="startWebcam()">Bật Webcam</button>
+            <button onclick="stopWebcam()" class="btn-stop">Tắt Webcam</button>
+          </div>
+
+          <img id="webcam" src="" style="display: none" />
+
+          <p class="note">
+            Đặt rác thải vào giữa khung hình để hệ thống nhận diện.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showTab(tabId, btn) {
+        const tabs = document.querySelectorAll(".tab-content");
+        const buttons = document.querySelectorAll(".tab-btn");
+
+        tabs.forEach((tab) => tab.classList.remove("active"));
+        buttons.forEach((button) => button.classList.remove("active"));
+
+        document.getElementById(tabId).classList.add("active");
+        btn.classList.add("active");
+      }
+
+      const imageInput = document.getElementById("imageInput");
+      const preview = document.getElementById("preview");
+
+      imageInput.addEventListener("change", function () {
+        const file = this.files[0];
+
+        if (file) {
+          preview.src = URL.createObjectURL(file);
+          preview.style.display = "block";
+        }
+      });
+
+      function predictImage() {
+        let file = imageInput.files[0];
+
+        if (!file) {
+          alert("Vui lòng chọn ảnh");
+          return;
+        }
+
+        let formData = new FormData();
+        formData.append("image", file);
+
+        document.getElementById("result").innerHTML = "⏳ Đang xử lý...";
+
+        fetch("/predict_image", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("result").innerHTML = data.result;
+          })
+          .catch((error) => {
+            document.getElementById("result").innerHTML = "❌ Lỗi xử lý";
+          });
+      }
+
+      function startWebcam() {
+        const webcam = document.getElementById("webcam");
+        webcam.src = "/video_feed";
+        webcam.style.display = "block";
+      }
+
+      function stopWebcam() {
+        const webcam = document.getElementById("webcam");
+        webcam.src = "";
+        webcam.style.display = "none";
+      }
+    </script>
+    <script src="../static/script.js"></script>
+  </body>
+</html>
